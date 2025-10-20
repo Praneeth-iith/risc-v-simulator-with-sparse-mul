@@ -29,7 +29,7 @@ enum Instruction {
   kLoadType,
   
   kCsrType, // CSR type instructions
-
+  kSMType,  //Sparse Multiplication type
 
   // Real instructions
   kadd, 
@@ -133,7 +133,8 @@ enum Instruction {
   kdivuw, 
   kremw, 
   kremuw,
-
+  ksparse_mul //Sparse Multiplication instruction for Integers
+  
   kflw, 
   kfsw, 
   kfmadd_s, 
@@ -227,8 +228,8 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kJtype,      0b1101111, -1, -1, -1, -1, -1), // kJtype
   // InstructionEncoding(Instruction::kUtype,      0b0110111, -1, -1, -1, -1, -1), // kUtype
   InstructionEncoding(Instruction::kLoadType,   0b0000011, -1, -1, -1, -1, -1), // kLoadType
-
   InstructionEncoding(Instruction::kCsrType,  0b1110011, -1, -1, -1, -1, -1), // kCsrType
+  InstructionEncoding(Instruction::kSMType,   0b1011011, -1, -1, -1, -1, -1), //kSMType
 
   InstructionEncoding(Instruction::kadd,        0b0110011, -1, 0b000, -1, -1, 0b0000000), // kadd
   InstructionEncoding(Instruction::ksub,        0b0110011, -1, 0b000, -1, -1, 0b0100000), // ksub
@@ -318,6 +319,8 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::kcsrrsi,     0b1110011, -1, 0b110, -1, -1, -1), // kcsrrsi
   InstructionEncoding(Instruction::kcsrrci,     0b1110011, -1, 0b111, -1, -1, -1), // kcsrrci
 
+  // SM TYpe
+  InstructionEncoding(Instruction::ksparse_mul, 0b1011011, 0b00, 0b000, -1, -1, -1), //ksparse_mul
 
   InstructionEncoding(Instruction::kfsgnj_s,    0b1010011, -1, 0b000, -1, -1, 0b0010000), // kfsgnj_s
   InstructionEncoding(Instruction::kfsgnjn_s,   0b1010011, -1, 0b001, -1, -1, 0b0010000), // kfsgnjn_s
@@ -521,6 +524,16 @@ struct CSR_ITypeInstructionEncoding {
       : opcode(opcode), funct3(funct3) {}
 };
 
+struct SMTypeInstructionEncoding {
+  std::bitset<7> opcode;
+  std::bitset<2> funct2;
+  std::bitset<3> funct3;
+
+  SMTypeInstructionEncoding(unsigned int opcode, unsigned int funct2, unsigned int funct3)
+      : opcode(opcode), funct2(funct2), funct3(funct3) {}
+};
+
+
 // Fextension instructions===========================================================================
 
 struct FDRTypeInstructionEncoding { // fsgnj
@@ -596,6 +609,7 @@ enum class SyntaxType {
   O_GPR_C_IL,           ///< Opcode register , instruction_label
   O_GPR_C_DL,           ///< Opcode register , data_label
   O_GPR_C_I_LP_GPR_RP,    ///< Opcode register , immediate , lparen ( register )rparen
+  O_GPR_C_GPR_C_GPR_C_GPR, ///< Opcode general-register , general-register , general-register , general-register
   O,                  ///< Opcode
   PSEUDO,              ///< Pseudo instruction
 
@@ -627,6 +641,7 @@ extern std::unordered_map<std::string, UTypeInstructionEncoding> U_type_instruct
 extern std::unordered_map<std::string, JTypeInstructionEncoding> J_type_instruction_encoding_map;
 extern std::unordered_map<std::string, CSR_RTypeInstructionEncoding> CSR_R_type_instruction_encoding_map;
 extern std::unordered_map<std::string, CSR_ITypeInstructionEncoding> CSR_I_type_instruction_encoding_map;
+extern std::unordered_map<std::string, SMTypeInstructionEncoding> SM_type_instruction_encoding_map;
 
 extern std::unordered_map<std::string, FDRTypeInstructionEncoding> F_D_R_type_instruction_encoding_map;
 extern std::unordered_map<std::string, FDR1TypeInstructionEncoding> F_D_R1_type_instruction_encoding_map;
@@ -654,6 +669,7 @@ bool isValidSTypeInstruction(const std::string &instruction);
 bool isValidBTypeInstruction(const std::string &instruction);
 bool isValidUTypeInstruction(const std::string &instruction);
 bool isValidJTypeInstruction(const std::string &instruction);
+bool isValidSMTypeInstruction(const std::string &instruction);
 
 bool isValidPseudoInstruction(const std::string &instruction);
 
