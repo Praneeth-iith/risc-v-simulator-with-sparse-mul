@@ -133,7 +133,7 @@ enum Instruction {
   kdivuw, 
   kremw, 
   kremuw,
-  ksparse_mul //Sparse Multiplication instruction for Integers
+  ksparse_mul, //Sparse Multiplication instruction for Integers
   
   kflw, 
   kfsw, 
