@@ -49,7 +49,8 @@ enum class ErrorType {
   MISALIGNED_IMMEDIATE,  ///< Immediate value is misaligned.
   MISALIGNED_LABEL,      ///< Label is misaligned.
   IMMEDIATE_OUT_OF_RANGE,///< Immediate value is out of range.
-  UNKNOWN_ERROR          ///< An unknown error occurred.
+  UNKNOWN_ERROR,          ///< An unknown error occurred.
+  MATRIX_MULTIPLICATION_INCOMPATIBLE ///<Matrix dimensions are not compatible with multiplication
 };
 
 /**
@@ -62,7 +63,7 @@ enum class ErrorType {
 struct SyntaxError {
   std::string main_message;   ///< Main error message.
   std::string sub_message;    ///< Sub error message with additional details.
-  std::string filename;       ///< Filename where the error occurred.
+  std::string filename;       ///< Filename where the error occurred.>
   unsigned int line_number;   ///< Line number where the error occurred.
   unsigned int column_number; ///< Column number where the error occurred.
   std::string line_text;      ///< Text of the line where the error occurred.
@@ -124,6 +125,31 @@ struct ImmediateOutOfRangeError {
         line_text(std::move(line_text)) {}
 
   friend std::ostream &operator<<(std::ostream &os, const ImmediateOutOfRangeError &error);
+};
+
+/**
+ * @struct MatrixMultiplicationError
+ * @brief Represents an error caused when 2 matrices with incompatible dimensions are multiplied.
+ */
+struct MatrixMultiplicationError {
+  std::string main_message;   ///< Main error message.
+  std::string sub_message;    ///< Sub error message with additional details.
+  std::string filename;       ///< Filename where the error occurred.
+  unsigned int line_number;            ///< Line number where the error occurred.
+  unsigned int column_number;          ///< Column number where the error occurred.
+  std::string line_text;      ///< Text of the line where the error occurred.
+
+  MatrixMultiplicationError(std::string main_message,
+                           std::string sub_message,
+                           std::string filename,
+                           unsigned int line_number,
+                           unsigned int column_number,
+                           std::string line_text)
+      : main_message(std::move(main_message)), sub_message(std::move(sub_message)),
+        filename(std::move(filename)), line_number(line_number), column_number(column_number),
+        line_text(std::move(line_text)) {}
+
+  friend std::ostream &operator<<(std::ostream &os, const MatrixMultiplicationError &error);
 };
 
 /**
