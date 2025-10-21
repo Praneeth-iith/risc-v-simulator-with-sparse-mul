@@ -169,6 +169,26 @@ uint32_t generateJTypeMachineCode(const ICUnit &block) {
   return machineCode;
 }
 
+uint32_t generateSMTypeMachineCode(const ICUnit &block) {
+  const auto &encoding = instruction_set::SM_type_instruction_encoding_map.at(block.getOpcode());
+  const uint32_t rd = extractRegisterIndex(block.getRd());
+  const uint32_t rs1 = extractRegisterIndex(block.getRs1());
+  const uint32_t rs2 = extractRegisterIndex(block.getRs2());
+  const uint32_t rs3 = extractRegisterIndex(block.getRs3());
+  const uint32_t funct3 = encoding.funct3.to_ulong();
+  const uint32_t funct2 = encoding.funct2.to_ulong();
+  const uint32_t opcode = encoding.opcode.to_ulong();
+  uint32_t machineCode = 0;
+  machineCode |= (funct2 << 30);
+  machineCode |= (rs3 << 25);
+  machineCode |= (rs2 << 20);
+  machineCode |= (rs1 << 15);
+  machineCode |= (funct3 << 12);
+  machineCode |= (rd << 7);
+  machineCode |= opcode;
+  return machineCode;
+}
+
 uint32_t generateCSRRTypeMachineCode(const ICUnit &block) {
   const auto &encoding = instruction_set::CSR_R_type_instruction_encoding_map.at(block.getOpcode());
   uint32_t rd = extractRegisterIndex(block.getRd());
@@ -345,6 +365,8 @@ std::vector<uint32_t> generateMachineCode(const std::vector<std::pair<ICUnit, bo
       code = generateFDITypeMachineCode(block);
     } else if (instruction_set::isValidFDSTypeInstruction(block.getOpcode())) {
       code = generateFDSTypeMachineCode(block);
+    } else if (instruction_set::isValidSMTypeInstruction(block.getOpcode())) {
+      code = generateSMTypeMachineCode(block);
     } else {
       throw std::runtime_error("Invalid instruction type: " + block.getOpcode());
     }
