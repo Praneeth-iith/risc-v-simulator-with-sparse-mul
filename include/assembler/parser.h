@@ -46,7 +46,8 @@ struct ErrorTracker {
       errors::UnexpectedOperandError,
       errors::InvalidLabelRefError,
       errors::LabelRedefinitionError,
-      errors::InvalidRegisterError
+      errors::InvalidRegisterError,
+      errors::MatrixMultiplicationError
   >> all_errors; ///< A list of all errors, including syntax and semantic errors.
 };
 
@@ -121,6 +122,7 @@ class Parser {
   void recordError(const ParseError &error);
 
   bool parse_O_GPR_C_GPR_C_GPR();
+  bool parse_O_GPR_C_GPR_C_GPR_C_GPR(); //SM type
   bool parse_O_GPR_C_GPR_C_I();
   bool parse_O_GPR_C_I();
   bool parse_O_GPR_C_GPR_C_IL();
