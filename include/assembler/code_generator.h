@@ -265,6 +265,14 @@ uint32_t generateUTypeMachineCode(const ICUnit &block);
  */
 uint32_t generateJTypeMachineCode(const ICUnit &block);
 
+/**
+ * @brief Generates machine code for an SM-type instruction (sparse_mul).
+ * 
+ * @param block The ICUnit representing the instruction.
+ * @return The machine code bitset<32>.
+ */
+uint32_t generateSMTypeMachineCode(const ICUnit &block);
+
 uint32_t generateCSRRTypeMachineCode(const ICUnit &block);
 uint32_t generateCSRITypeMachineCode(const ICUnit &block);
 
