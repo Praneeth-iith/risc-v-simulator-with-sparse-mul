@@ -533,3 +533,38 @@ bool Parser::parse_O_GPR_C_I_LP_GPR_RP() {
   return false;
 }
 
+
+bool Parser::parse_O_GPR_C_GPR_C_GPR_C_GPR() {
+  if (peekToken(1).line_number==currentToken().line_number
+      && peekToken(1).type==TokenType::GP_REGISTER
+      && peekToken(2).type==TokenType::COMMA
+      && peekToken(3).type==TokenType::GP_REGISTER
+      && peekToken(4).type==TokenType::COMMA
+      && peekToken(5).type==TokenType::GP_REGISTER
+      && peekToken(6).type==TokenType::COMMA
+      && peekToken(7).type==TokenType::GP_REGISTER
+      && (peekToken(8).type==TokenType::EOF_ || peekToken(8).line_number!=currentToken().line_number)
+      ) {
+    ICUnit block;
+    block.setOpcode(currentToken().value);
+    block.setLineNumber(currentToken().line_number);
+    block.setInstructionIndex(instruction_index_);
+
+    std::string reg;
+    reg = reg_alias_to_name.at(peekToken(1).value);
+    block.setRd(reg);
+    reg = reg_alias_to_name.at(peekToken(3).value);
+    block.setRs1(reg);
+    reg = reg_alias_to_name.at(peekToken(5).value);
+    block.setRs2(reg);
+    reg = reg_alias_to_name.at(peekToken(7).value);
+    block.setRs3(reg);
+
+    skipCurrentLine();
+    intermediate_code_.emplace_back(block, true);
+    instruction_number_line_number_mapping_[instruction_index_] = block.getLineNumber();
+    instruction_index_++;
+    return true;
+  }
+  return false;
+}
