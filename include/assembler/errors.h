@@ -138,16 +138,18 @@ struct MatrixMultiplicationError {
   unsigned int line_number;            ///< Line number where the error occurred.
   unsigned int column_number;          ///< Column number where the error occurred.
   std::string line_text;      ///< Text of the line where the error occurred.
+  std::string dim1;           ///< Dimension of matrix represented by operand 1 
+  std::string dim2;           ///< Dimension of matrix represented by operand 2 
 
   MatrixMultiplicationError(std::string main_message,
                            std::string sub_message,
                            std::string filename,
                            unsigned int line_number,
                            unsigned int column_number,
-                           std::string line_text)
+                           std::string line_text,std::string dim1,std::string dim2)
       : main_message(std::move(main_message)), sub_message(std::move(sub_message)),
         filename(std::move(filename)), line_number(line_number), column_number(column_number),
-        line_text(std::move(line_text)) {}
+        line_text(std::move(line_text)) , dim1(std::move(dim1)) , dim2(std::move(dim2)) {}
 
   friend std::ostream &operator<<(std::ostream &os, const MatrixMultiplicationError &error);
 };
