@@ -52,6 +52,7 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"divuw", Instruction::kdivuw},
     {"remw", Instruction::kremw},
     {"remuw", Instruction::kremuw},
+    {"sparse_mul", Instruction::ksparse_mul},
 
     {"addi", Instruction::kaddi},
     {"xori", Instruction::kxori},
@@ -192,6 +193,8 @@ static const std::unordered_set<std::string> valid_instructions = {
 
     "csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci",
 
+    "sparse_mul",
+
     "la", "nop", "li", "mv", "not", "neg", "negw",
     "sext.w", "seqz", "snez", "sltz", "sgtz",
     "beqz", "bnez", "blez", "bgez", "bltz", "bgtz",
@@ -276,6 +279,11 @@ static const std::unordered_set<std::string> UTypeInstructions = {
 static const std::unordered_set<std::string> JTypeInstructions = {
     "jal"
 };
+
+static const std::unordered_set<std::string> SMTypeInstructions = {
+    "sparse_mul"
+};
+
 
 static const std::unordered_set<std::string> PseudoInstructions = {
     "la", "nop", "li", "mv", "not", "neg", "negw",
@@ -478,10 +486,14 @@ std::unordered_map<std::string, CSR_RTypeInstructionEncoding> CSR_R_type_instruc
     {"csrrc", {0b1110011, 0b011}}, // O_GPR_C_CSR_C_GPR
 };
 
-std::unordered_map<std::string, CSR_ITypeInstructionEncoding> CSR_I_type_instruction_encoding_map{
+std::unordered_map<std::string, CSR_ITypeInstructionEncoding> CSR_I_type_instruction_encoding_map = {
     {"csrrwi", {0b1110011, 0b101}}, // O_GPR_C_CSR_C_I
     {"csrrsi", {0b1110011, 0b110}}, // O_GPR_C_CSR_C_I
     {"csrrci", {0b1110011, 0b111}}, // O_GPR_C_CSR_C_I
+};
+
+std::unordered_map<std::string, SMTypeInstructionEncoding> SM_type_instruction_encoding_map = {
+    {"sparse_mul", {0b1011011, 0b000, 0b00}}, // O_GPR_C_GPR_C_GPR_C_GPR
 };
 
 std::unordered_map<std::string, FDRTypeInstructionEncoding> F_D_R_type_instruction_encoding_map = {
@@ -593,6 +605,7 @@ std::unordered_map<std::string, FDSTypeInstructionEncoding> F_D_S_type_instructi
     O_GPR_C_IL,           ///< Opcode register , instruction_label
     O_GPR_C_DL,           ///< Opcode register , data_label
     O_GPR_C_I_LP_GPR_RP,    ///< Opcode register , immediate , lparen ( register )rparen
+    O_GPR_C_GPR_C_GPR_C_GPR, ///< Opcode general-register , general-register , general-register , general-register
     O,                  ///< Opcode
     PSEUDO,              ///< Pseudo instruction
 
@@ -627,6 +640,7 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"sra", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"slt", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"sltu", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"sparse_mul",{SyntaxType::O_GPR_C_GPR_C_GPR_C_GPR}},
 
     {"addi", {SyntaxType::O_GPR_C_GPR_C_I}},
     {"xori", {SyntaxType::O_GPR_C_GPR_C_I}},
@@ -859,6 +873,10 @@ bool isValidJTypeInstruction(const std::string &instruction) {
   return JTypeInstructions.find(instruction)!=JTypeInstructions.end();
 }
 
+bool isValidSMTypeInstruction(const std::string &instruction) {
+  return STypeInstructions.find(instruction)!=STypeInstructions.end();
+}
+
 bool isValidPseudoInstruction(const std::string &instruction) {
   return PseudoInstructions.find(instruction)!=PseudoInstructions.end();
 }
@@ -998,6 +1016,7 @@ std::string getExpectedSyntaxes(const std::string &opcode) {
   static const std::unordered_map<SyntaxType, std::string> syntaxTypeToString = {
       {SyntaxType::O, "<empty>"},
       {SyntaxType::O_GPR_C_GPR_C_GPR, "<gp-reg>, <gp-reg>, <gp-reg>"},
+      {SyntaxType::O_GPR_C_GPR_C_GPR_C_GPR, "<gp-reg>, <gp-reg>, <gp-reg>, <gp-reg>"},
       {SyntaxType::O_GPR_C_GPR_C_I, "<gp-reg>, <gp-reg>, <imm>"},
       {SyntaxType::O_GPR_C_GPR_C_IL, "<gp-reg>, <gp-reg>, <text-label>"},
       {SyntaxType::O_GPR_C_GPR_C_DL, "<gp-reg>, <gp-reg>, <data-label>"},
