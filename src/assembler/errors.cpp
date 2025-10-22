@@ -51,6 +51,20 @@ std::ostream &operator<<(std::ostream &os, const ImmediateOutOfRangeError &error
   return os;
 }
 
+std::ostream &operator<<(std::ostream &os, const MatrixMultiplicationError &error) {
+    os << error.filename << ":" << error.line_number << ":" << error.column_number << ": "
+       << ANSI_code_red << "[ERROR]" << ANSI_code_reset << " "
+       << error.main_message << " ("
+       << error.dim1 << " × " << error.dim2 << ")\n"
+       << std::setw(6) << std::right << error.line_number << " | " << error.line_text << "\n"
+       << std::setw(6) << " " << " | " 
+       << ANSI_code_red << std::setw(error.column_number) << std::right << "^" << ANSI_code_reset << "\n"
+       << std::setw(6) << " " << " | " << error.sub_message << "\n"
+       << std::setw(6) << " " << " | " << "\n"
+       << std::setw(0);
+    return os;
+}
+
 std::ostream &operator<<(std::ostream &os, const MisalignedImmediateError &error) {
   os << error.filename << ":" << error.line_number << ":" << error.column_number << ": "
      << ANSI_code_red << "[ERROR]" << ANSI_code_reset << " "
@@ -116,4 +130,5 @@ std::ostream &operator<<(std::ostream &os, const InvalidRegisterError &error) {
   return os;
 }
 
-} // namespace errors
+}
+
