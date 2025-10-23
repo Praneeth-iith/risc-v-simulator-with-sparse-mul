@@ -874,7 +874,7 @@ bool isValidJTypeInstruction(const std::string &instruction) {
 }
 
 bool isValidSMTypeInstruction(const std::string &instruction) {
-  return STypeInstructions.find(instruction)!=STypeInstructions.end();
+  return SMTypeInstructions.find(instruction)!=SMTypeInstructions.end();
 }
 
 bool isValidPseudoInstruction(const std::string &instruction) {
