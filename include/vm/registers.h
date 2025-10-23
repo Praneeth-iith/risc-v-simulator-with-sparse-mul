@@ -22,19 +22,20 @@ class RegisterFile {
   static constexpr size_t NUM_GPR = 32; ///< Number of General-Purpose Registers (GPR).
   static constexpr size_t NUM_FPR = 32; ///< Number of Floating-Point Registers (FPR).
   static constexpr size_t NUM_VR = 4;  ///< Number of Vector Registers for Integers (VR). 
-  static constexpr size_t VEC_DIM = 8; ///< Dimension of a Vector register.
-  static constexpr size_t NUM_SR = 1; ///< Number of Scalar registers (SR) 
-
+  
   std::array<uint64_t, NUM_GPR> gpr_ = {}; ///< Array for storing GPR values.
   std::array<uint64_t, NUM_FPR> fpr_ = {}; ///< Array for storing FPR values.
-  std::array<std::array<uint64_t,VEC_DIM>, NUM_VR>  vr_ = {}; ///<Array for storing VR values.
-  std::array<uint64_t, NUM_SR> sr_ = {}; ///< Array to store scalar register 
-
+  
   static constexpr size_t NUM_CSR = 4096; ///< Number of Control and Status Registers (CSR).
 
   std::array<uint64_t, NUM_CSR> csr_ = {}; ///< Array for storing CSR values.
 
  public:
+  static constexpr size_t VEC_DIM = 8; ///< Dimension of a Vector register.
+  static constexpr size_t NUM_SR = 1; ///< Number of Scalar registers (SR) 
+  std::array<std::array<uint64_t,VEC_DIM>, NUM_VR>  vr_ = {}; ///<Array for storing VR values.
+  std::array<uint64_t, NUM_SR> sr_ = {}; ///< Array to store scalar register 
+
   /**
    * @brief Enum representing the type of a register.
    */
