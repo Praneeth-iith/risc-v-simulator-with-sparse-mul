@@ -138,6 +138,7 @@ class RegisterFile {
 
   void ModifyRegister(const std::string &reg_name, uint64_t value);
   void ModifyVRegister(const std::string &reg_name, std::array<uint64_t, VEC_DIM> value);
+  void ModifySRegister(const std::string &reg_name, uint64_t value);
 };
 
 extern const std::unordered_set<std::string> valid_general_purpose_registers;
