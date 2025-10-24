@@ -33,6 +33,28 @@ void RegisterFile::WriteGpr(size_t reg, uint64_t value) {
   gpr_[reg] = value;
 }
 
+std::array<uint64_t, RegisterFile::VEC_DIM> RegisterFile::ReadVr(size_t reg) const {
+  if (reg >= NUM_VR) throw std::out_of_range("Invalid VR index");
+  if(reg==0) return {};
+  return vr_[reg]; 
+}
+
+void RegisterFile::WriteVr(size_t reg, std::array<uint64_t, VEC_DIM> values) {
+  if (reg >= NUM_VR) throw std::out_of_range("Invalid VR index");
+  if(reg==0) return;
+  vr_[reg] = values;
+}
+
+uint64_t RegisterFile::ReadSr(size_t reg) const {
+  if(reg >= NUM_SR) throw std::out_of_range("Invalid SR index");
+  return sr_[reg];
+}
+
+void RegisterFile::WriteSr(size_t reg, uint64_t value) {
+  if (reg >= NUM_SR) throw std::out_of_range("Invalid SR index");
+  sr_[reg] = value;
+}
+
 uint64_t RegisterFile::ReadFpr(size_t reg) const {
   if (reg >= NUM_FPR) throw std::out_of_range("Invalid FPR index");
   return fpr_[reg];
@@ -69,11 +91,21 @@ void RegisterFile::ModifyRegister(const std::string &reg_name, uint64_t value) {
     WriteFpr(std::stoi(reg_name_n.substr(1)), value);
   } else if (IsValidCsr(reg_name_n)) {
     WriteCsr(csr_to_address.at(reg_name_n), value);
+  } else if (IsValidSr(reg_name_n)) {
+    WriteSr(std::stoi(reg_name_n.substr(1)), value);
   } else {
     throw std::invalid_argument("Invalid register name: " + reg_name_n);
   }
 }
 
+void RegisterFile::ModifyVRegister(const std::string &reg_name, std::array<uint64_t, VEC_DIM> value) {
+  std::string reg_name_n = reg_alias_to_name.at(reg_name);
+  if (IsValidVr(reg_name_n)) {
+    WriteVr(std::stoi(reg_name_n.substr(1)), value);
+  } else {
+    throw std::invalid_argument("Invalid register name: " + reg_name_n);
+  }
+}
 
 
 const std::unordered_set<std::string> valid_general_purpose_registers = {
@@ -112,6 +144,14 @@ const std::unordered_map<std::string, int> csr_to_address{
     {"fflags", 0x001},
     {"frm", 0x002},
     {"fcsr", 0x003},
+};
+
+const std::unordered_set<std::string> valid_vector_registers = {
+    "v0", "v1", "v2", "v3",
+};
+
+const std::unordered_set<std::string> valid_scalar_registers = {
+    "sc0",
 };
 
 const std::unordered_map<std::string, std::string> reg_alias_to_name = {
