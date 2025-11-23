@@ -71,7 +71,6 @@ class Parser {
   unsigned int instruction_index_ = 0; ///< The current instruction index.
 
   ErrorTracker errors_; ///< The error tracker instance.
-
   std::vector<std::variant<uint8_t, uint16_t, uint32_t, uint64_t, std::string, float, double>>
       data_buffer_; ///< The buffer for data directives.
 
@@ -119,7 +118,7 @@ class Parser {
    * @brief Records a parse error.
    * @param error The parse error to record.
    */
-  void recordError(const ParseError &error);
+
 
   bool parse_O_GPR_C_GPR_C_GPR();
   bool parse_O_GPR_C_GPR_C_GPR_C_GPR(); //SM type
@@ -182,6 +181,8 @@ class Parser {
    */
   void parse();
 
+  void recordError(const ParseError &error);
+  
   unsigned int getErrorCount() const;
 
   /**

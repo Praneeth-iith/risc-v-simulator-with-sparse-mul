@@ -20,7 +20,7 @@
  * @brief Assembles the intermediate code into machine code.
  * 
  * This function takes a vector of intermediate code blocks and assembles them into machine code.
- * It uses the functions generateRTypeMachineCode, generateITypeMachineCode, generateSTypeMachineCode,
+ * It uses the functions generateRTypeMachineCode, generateITypeMachineCode, generateSTypeMachineCode, generateSMTypeMachineCode
  * generateBTypeMachineCode, generateUTypeMachineCode, and generateJTypeMachineCode to generate the
  * machine code for each block.
  * 

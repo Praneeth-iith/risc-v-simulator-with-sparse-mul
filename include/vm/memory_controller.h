@@ -47,6 +47,10 @@ public:
       memory_.WriteDoubleWord(address, value);
     }
 
+    void WriteVector(uint64_t address, std::array<uint64_t, RegisterFile::VEC_DIM> values) {
+      memory_.WriteVector(address, values);
+    }
+
     [[nodiscard]] uint8_t ReadByte(uint64_t address) {
         return memory_.ReadByte(address);
     }
@@ -62,6 +66,11 @@ public:
     [[nodiscard]] uint64_t ReadDoubleWord(uint64_t address) {
         return memory_.ReadDoubleWord(address);
     }
+
+    [[nodiscard]] std::array<uint64_t, RegisterFile::VEC_DIM> ReadVector(uint64_t address) {
+        return memory_.ReadVector(address);
+    }
+
 
     // Functions to read memory directly with cache bypass
 

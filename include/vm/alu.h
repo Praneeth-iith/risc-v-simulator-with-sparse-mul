@@ -1,7 +1,7 @@
 /**
  * @file alu.h
  * @brief Contains the definition of the alu class for performing arithmetic and logic operations.
- * @author Vishank Singh, httpa://github.com/VishankSingh
+ * @author Praneeth Kodavati, httpa://github.com/Praneeth-iith
  */
 #ifndef ALU_H
 #define ALU_H
@@ -55,8 +55,9 @@ enum class AluOp {
     kSra, ///< Shift right arithmetic operation.
     kSraw, ///< Shift right arithmetic word operation.
     kSlt, ///< Set less than operation.
+    kmeta,
     kSltu, ///< Unsigned set less than operation.
-
+    ksparse_mul, ///< sparse matrix multiplication 
     // Floating point operations
     kFmadd_s, ///< Floating point multiply-add single operation.
     kFmsub_s, ///< Floating point multiply-subtract single operation.
@@ -195,8 +196,8 @@ inline std::ostream& operator<<(std::ostream& os, const AluOp& op) {
         case AluOp::FDIV_D: os << "FDIV_D"; break;
         case AluOp::FSQRT_D: os << "FSQRT_D"; break;
         case AluOp::FSGNJ_D: os << "FSGNJ_D"; break;
-
-
+        case AluOp::ksparse_mul: os << "kSparse_mul"; break;
+        case AluOp::kmeta: os << "kmeta"; break;
         default: os << "UNKNOWN"; break;
     }
     return os;

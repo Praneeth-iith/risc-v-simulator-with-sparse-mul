@@ -24,8 +24,14 @@ enum class VmTypes {
   MULTI_STAGE
 };
 
+enum class RunningModes {
+  TESTING_MODE,
+  PERFORMANCE_MODE,
+};
+
 struct VmConfig {
   VmTypes vm_type = VmTypes::SINGLE_STAGE;
+  RunningModes run_mode = RunningModes::PERFORMANCE_MODE;
   uint64_t run_step_delay = 300;
   uint64_t memory_size = 0xffffffffffffffff; // 64-bit address space
   uint64_t memory_block_size = 1024; // 1 KB blocks
@@ -33,12 +39,12 @@ struct VmConfig {
   uint64_t text_section_start = 0x0; // Default start address for text section
   uint64_t bss_section_start = 0x11000000; // Default start address for BSS section
 
-  uint64_t instruction_execution_limit = 100;
+  uint64_t instruction_execution_limit = 10000000000000000;
 
   bool m_extension_enabled = true;
   bool f_extension_enabled = true;
   bool d_extension_enabled = true;
-
+  
   void setVmType(const VmTypes &type) {
     vm_type = type;
   }
@@ -46,13 +52,24 @@ struct VmConfig {
   VmTypes getVmType() const {
     return vm_type;
   }
+
+  RunningModes getRunMode() const {
+    return run_mode;
+  }
+
+  void setRunMode(const RunningModes &type){
+    run_mode = type;
+  } 
+
   void setRunStepDelay(uint64_t delay) {
     run_step_delay = delay;
     std::cout << "Run step delay set to: " << run_step_delay << " ms" << std::endl;
   }
+
   uint64_t getRunStepDelay() const {
     return run_step_delay;
   }
+
   void setMemorySize(uint64_t size) {
     memory_size = size;
   }
@@ -130,7 +147,16 @@ struct VmConfig {
         } else {
           throw std::invalid_argument("Unknown VM type: " + value);
         }
-      } else if (key == "run_step_delay") {
+      } else if (key == "run_mode") {
+        if ( value == "testing_mode") {
+          setRunMode(RunningModes::TESTING_MODE);
+        } else if (value == "performance_mode") {
+          setRunMode(RunningModes::PERFORMANCE_MODE);
+        }else{
+            throw std::invalid_argument("Unknown VM type: " + value);
+        }
+      }
+       else if (key == "run_step_delay") {
         setRunStepDelay(std::stoull(value));
       } else if (key == "instruction_execution_limit") {
         setInstructionExecutionLimit(std::stoull(value));
@@ -157,7 +183,7 @@ struct VmConfig {
       else {
         throw std::invalid_argument("Unknown key: " + key);
       }
-    } 
+    }
 
     else if (section == "Assembler") {
       if (key == "m_extension_enabled") {

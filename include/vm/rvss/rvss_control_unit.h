@@ -12,7 +12,6 @@
 class RVSSControlUnit : public ControlUnit {
  public:
   void SetControlSignals(uint32_t instruction) override;
-
   alu::AluOp GetAluSignal(uint32_t instruction, bool ALUOp) override;
 
 };

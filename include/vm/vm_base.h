@@ -10,7 +10,7 @@
 #include "registers.h"
 #include "memory_controller.h"
 #include "alu.h"
-
+#include "vec_alu.h"
 #include "vm_asm_mw.h"
 
 #include <vector>
@@ -21,6 +21,7 @@
 #include <condition_variable>
 #include <queue>
 #include <atomic>
+#include "vm/rvss/sparse_mul_pipeline.h"
 
 enum SyscallCode {
     SYSCALL_PRINT_INT = 1,
@@ -54,19 +55,19 @@ public:
     float cpi_{};
     float ipc_{};
     unsigned int stall_cycles_{};
+    unsigned int remaining_stall_cycles{};
     unsigned int branch_mispredictions_{};
 
     std::string output_status_;
 
-    
 
-
+    std::atomic<bool> is_sparse_pipeline_busy_ = false;
+    std::atomic<bool> is_meta_datapath_busy_ = false;
 
     MemoryController memory_controller_;
     RegisterFile registers_;
     
     alu::Alu alu_;
-
 
     void LoadProgram(const AssembledProgram &program);
     uint64_t program_size_ = 0;

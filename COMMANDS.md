@@ -40,6 +40,7 @@
     - `processor_type` (string) : `single_stage` | `multi_stage`  
     - `run_step_delay` (unsigned int) : milliseconds
     - `instruction_execution_limit` (unsigned int) : Specifies the number of instruction to run on one use of `run` button. Set to `0` for no limit.
+    - `run_mode` (string) : `testing_mode` | `performance_mode`
   - `Memory`
     - `memory_size` (unsigned int) : bytes
     - `memory_block_size` (unsigned int) : bytes  

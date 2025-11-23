@@ -256,6 +256,22 @@ alu::AluOp RVSSControlUnit::GetAluSignal(uint32_t instruction, bool ALUOp) {
         }
         break;
     }
+
+    case 0b1011011: {//SM - Type
+        switch (funct3)
+        {
+            case 0b000: {
+                switch (funct2)
+                {
+                    case 0b00:   //ksparse_mul
+                        return alu::AluOp::ksparse_mul;
+                }
+                break;
+            }
+        }
+        break;
+    }
+
     case 0b0010011: {// I-Type
         switch (funct3)
         {

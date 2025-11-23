@@ -30,6 +30,8 @@ std::vector<std::string> printIntermediateCode(const std::vector<std::pair<ICUni
       code = block.getOpcode() + " " + block.getRd() + " " + block.getImm();
     } else if (instruction_set::isValidJTypeInstruction(block.getOpcode())) {
       code = block.getOpcode() + " " + block.getRd() + " " + block.getImm() + " <" + block.getLabel() + ">";
+    } else if( instruction_set::isValidSMTypeInstruction(block.getOpcode())) {
+      code = block.getOpcode() + " " + block.getRd() + " " + block.getRs1() + " " + block.getRs2() + " " + block.getRs3();
     } else {
       code = block.getOpcode() + " " + block.getImm();
     }

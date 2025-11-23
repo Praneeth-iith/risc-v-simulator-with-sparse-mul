@@ -8,7 +8,7 @@
 #define MAIN_MEMORY_H
 
 #include "config.h"
-
+#include "registers.h"
 #include <vector>
 #include <unordered_map>
 #include <cstdint>
@@ -142,6 +142,13 @@ class Memory {
    */
   uint64_t ReadDoubleWord(uint64_t address);
 
+  /**
+   * @brief Reads  VEC_DIM number of 64-bit double words from the given memory address.
+   * @param address The memory address to read from.
+   * @return An array of VEC_DIM 64-bit values from the given address.
+   */
+  std::array<uint64_t, RegisterFile::VEC_DIM> ReadVector(uint64_t address);
+
   float ReadFloat(uint64_t address);
 
   double ReadDouble(uint64_t address);
@@ -173,6 +180,9 @@ class Memory {
    * @param value The 64-bit value to write.
    */
   void WriteDoubleWord(uint64_t address, uint64_t value);
+
+
+  void WriteVector(uint64_t address, std::array<uint64_t, RegisterFile::VEC_DIM> values);
 
   void WriteFloat(uint64_t address, float value);
 

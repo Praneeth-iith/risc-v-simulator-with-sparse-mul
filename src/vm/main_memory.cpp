@@ -102,6 +102,19 @@ uint64_t Memory::ReadDoubleWord(uint64_t address) {
   return ReadGeneric<uint64_t>(address);
 }
 
+std::array<uint64_t, RegisterFile::VEC_DIM> Memory::ReadVector(uint64_t address) {
+  if (address >= memory_size_ - 63) {
+    throw std::out_of_range(std::string("Memory address out of range: ") + std::to_string(address));
+  }
+  std::array<uint64_t, RegisterFile::VEC_DIM> values;
+
+  for(int i = 0 ;  i < (int)RegisterFile::VEC_DIM ; i++) {
+    values[i] = ReadGeneric<uint64_t>(address);
+    address+=8;
+  }
+  return values;
+} 
+
 float Memory::ReadFloat(uint64_t address) {
   if (address >= memory_size_ - (sizeof(float) - 1)) {
     throw std::out_of_range(std::string("Memory address out of range: ") + std::to_string(address));;
@@ -156,6 +169,16 @@ void Memory::WriteDoubleWord(uint64_t address, uint64_t value) {
   WriteGeneric<uint64_t>(address, value);
 }
 
+void Memory::WriteVector(uint64_t address, std::array<uint64_t, RegisterFile::VEC_DIM>  values ) {
+  if (address >= memory_size_ - 63) {
+    throw std::out_of_range(std::string("Memory address out of range: ") + std::to_string(address));
+  }
+  for(int i = 0 ; i < (int)RegisterFile::VEC_DIM ; i++){
+    WriteGeneric<uint64_t>(address, values[i]);
+    address+=8;
+  }
+}
+
 void Memory::WriteFloat(uint64_t address, float value) {
   if (address >= memory_size_ - (sizeof(float) - 1)) {
     throw std::out_of_range(std::string("Memory address out of range: ") + std::to_string(address));
@@ -192,10 +215,10 @@ void Memory::PrintMemory(const uint64_t address, unsigned int rows) {
       if (current_address + j >= memory_size_) {
         break;
       }
-      std::cout << std::hex << std::setw(2) << std::setfill('0')
+       std::cout << std::hex << std::setw(2) << std::setfill('0')
                 << static_cast<int>(Read(current_address + j)) << " ";
     }
-    std::cout << "| 0x" << std::hex << std::setw(16) << std::setfill('0')
+     std::cout << "| 0x" << std::hex << std::setw(16) << std::setfill('0')
               << static_cast<int64_t>(ReadDoubleWord(current_address));
     std::cout << std::dec << std::setfill(' ') << "\n";
   }
@@ -277,7 +300,7 @@ void Memory::printMemoryUsage() const {
     size_t used_bytes = std::count_if(block.data.begin(), block.data.end(),
                                       [](uint8_t byte) { return byte!=0; });
     if (used_bytes > 0) {
-      std::cout << "Block " << block_index << ": " << used_bytes
+       std::cout << "Block " << block_index << ": " << used_bytes
                 << " / " << block_size_ << " bytes used\n";
     }
   }

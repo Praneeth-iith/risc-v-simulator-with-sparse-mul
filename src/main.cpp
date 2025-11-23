@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     std::string arg = argv[i];
 
     if (arg == "--help" || arg == "-h") {
-        std::cout << "Usage: " << argv[0] << " [options]\n"
+         std::cout << "Usage: " << argv[0] << " [options]\n"
                   << "Options:\n"
                   << "  --help, -h           Show this help message\n"
                   << "  --assemble <file>    Assemble the specified file\n"
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
       std::string reg_str = command.args[0];
       if (reg_str[0] == 'x') {
         std::cout << "VM_REGISTER_VAL_START";
-        std::cout << "0x"
+           std::cout << "0x"
                   << std::hex
                   << vm.registers_.ReadGpr(std::stoi(reg_str.substr(1))) 
                   << std::dec;

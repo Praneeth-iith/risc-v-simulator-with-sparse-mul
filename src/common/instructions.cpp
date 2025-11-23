@@ -53,6 +53,7 @@ std::unordered_map<std::string, Instruction> instruction_string_map = {
     {"remw", Instruction::kremw},
     {"remuw", Instruction::kremuw},
     {"sparse_mul", Instruction::ksparse_mul},
+    {"meta", Instruction::kmeta},
 
     {"addi", Instruction::kaddi},
     {"xori", Instruction::kxori},
@@ -192,8 +193,8 @@ static const std::unordered_set<std::string> valid_instructions = {
     "ecall",
 
     "csrrw", "csrrs", "csrrc", "csrrwi", "csrrsi", "csrrci",
-
-    "sparse_mul",
+    
+    "sparse_mul","meta",
 
     "la", "nop", "li", "mv", "not", "neg", "negw",
     "sext.w", "seqz", "snez", "sltz", "sgtz",
@@ -231,7 +232,7 @@ static const std::unordered_set<std::string> RTypeInstructions = {
     "add", "sub", "and", "or", "xor", "sll", "srl", "sra", "slt", "sltu",
 
     // RV64
-    "addw", "subw", "sllw", "srlw", "sraw",
+    "addw", "subw", "sllw", "srlw", "sraw","meta",
 
     // M Extension
     "mul", "mulh", "mulhsu", "mulhu", "div", "divu", "rem", "remu",
@@ -395,6 +396,7 @@ std::unordered_map<std::string, RTypeInstructionEncoding> R_type_instruction_enc
     {"sra", {0b0110011, 0b101, 0b0100000}}, // O_GPR_C_GPR_C_GPR
     {"slt", {0b0110011, 0b010, 0b0000000}}, // O_GPR_C_GPR_C_GPR
     {"sltu", {0b0110011, 0b011, 0b0000000}}, // O_GPR_C_GPR_C_GPR
+    {"meta", {0b0110011, 0b100, 0b1000000}}, //O_GPR_C_GPR_C_GPR
 
     {"addw", {0b0111011, 0b000, 0b0000000}}, // O_GPR_C_GPR_C_GPR
     {"subw", {0b0111011, 0b000, 0b0100000}}, // O_GPR_C_GPR_C_GPR
@@ -639,7 +641,8 @@ std::unordered_map<std::string, std::vector<SyntaxType>> instruction_syntax_map 
     {"srl", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"sra", {SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"slt", {SyntaxType::O_GPR_C_GPR_C_GPR}},
-    {"sltu", {SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"sltu",{SyntaxType::O_GPR_C_GPR_C_GPR}},
+    {"meta",{SyntaxType::O_GPR_C_GPR_C_GPR}},
     {"sparse_mul",{SyntaxType::O_GPR_C_GPR_C_GPR_C_GPR}},
 
     {"addi", {SyntaxType::O_GPR_C_GPR_C_I}},
@@ -979,6 +982,24 @@ bool isDInstruction(const uint32_t &instruction) {
       }
     }
     default: break;
+  }
+  return false;
+}
+
+bool isSMInstruction(const uint32_t &instruction) {
+  uint8_t opcode = (instruction & 0b1111111);
+  if(opcode == 0b1011011){
+    return true;
+  }
+  return false;
+}
+
+bool isMetaInstruction(const uint32_t &instruction) {
+  uint8_t opcode = (instruction & 0b1111111);
+  uint8_t funct3 = (instruction>>12) & 0b111;
+  uint8_t funct7 = (instruction >> 25) & 0b1111111;
+  if(opcode == 0b0110011 && funct7 == 0b1000000 && funct3 == 0b100){
+    return true;
   }
   return false;
 }

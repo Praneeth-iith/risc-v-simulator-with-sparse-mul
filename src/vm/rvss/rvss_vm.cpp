@@ -10,7 +10,11 @@
 #include "globals.h"
 #include "common/instructions.h"
 #include "config.h"
-
+#include "vm/matrixmul_validation_unit.h"
+#include "assembler/parser.h"
+#include "utils.h"
+#include "vm/rvss/sparse_mul_pipeline.h"
+#include "vm/rvss/meta_datapath.h"
 #include <cctype>
 #include <cstdint>
 #include <iostream>
@@ -25,9 +29,10 @@
 
 using instruction_set::Instruction;
 using instruction_set::get_instr_encoding;
+using sparsePipeline::SparseMulPipeline;
+using metapath::MetaDataPath;
 
-
-RVSSVM::RVSSVM() : VmBase() {
+RVSSVM::RVSSVM() : VmBase(){
   DumpRegisters(globals::registers_dump_file_path, registers_);
   DumpState(globals::vm_state_dump_file_path);
 }
@@ -35,15 +40,115 @@ RVSSVM::RVSSVM() : VmBase() {
 RVSSVM::~RVSSVM() = default;
 
 void RVSSVM::Fetch() {
+  if(remaining_stall_cycles == 0){
+    is_sparse_pipeline_busy_ = false;
+    is_meta_datapath_busy_ = false;
+  }
+  if(is_sparse_pipeline_busy_){
+    remaining_stall_cycles--;
+    return;
+  }
+
+  if(is_meta_datapath_busy_){
+    remaining_stall_cycles--;
+    return;
+  }
+  
   current_instruction_ = memory_controller_.ReadWord(program_counter_);
   UpdateProgramCounter(4);
 }
 
 void RVSSVM::Decode() {
+  if(is_sparse_pipeline_busy_) return;
+  if(is_meta_datapath_busy_) return;
+  if (instruction_set::isMetaInstruction(current_instruction_)){
+    std::cout<<"Meta recongnized"<<std::endl;
+    uint8_t rs1 = (current_instruction_ >> 15) & 0b11111;
+    uint8_t rd  =  (current_instruction_ >> 7) & 0b11111;
+    is_meta_datapath_busy_ = true;
+    uint64_t sparseAddr = registers_.ReadGpr(rs1);
+    uint64_t metaAddr = registers_.ReadGpr(rd);
+    uint32_t rows = memory_controller_.ReadWord(sparseAddr);
+    sparseAddr+=4;
+    uint32_t columns = memory_controller_.ReadWord(sparseAddr);
+    sparseAddr+=4;
+    metapath::MetaDataPath meta_data_path_(metaAddr,sparseAddr,rows, columns, memory_controller_);
+    uint64_t size = (uint64_t)rows * (uint64_t)columns;
+    std::vector<uint8_t> old_block(size);
+    for (uint64_t i = 0; i < size; i++) {
+      old_block[i] = memory_controller_.ReadByte(metaAddr + i);
+    }
+    meta_data_path_.execute();
+    std::vector<uint8_t> new_block(size);
+    for (uint64_t i = 0; i < size; i++) {
+      new_block[i] = memory_controller_.ReadByte(metaAddr + i);
+    }
+
+    current_delta_.Matrix_block_changes.push_back({
+      metaAddr,
+      old_block,
+      new_block
+    });
+    
+    remaining_stall_cycles += (meta_data_path_.getCycles()+1)/2;
+    return;
+  }
+ 
+  if (instruction_set::isSMInstruction(current_instruction_)) {
+    std::cout<<"Sparse recongnized"<<std::endl;
+    uint8_t rs1 = (current_instruction_ >> 15) & 0b11111;
+    uint8_t rs2 = (current_instruction_ >> 20) & 0b11111;
+    uint8_t rs3 = (current_instruction_ >> 25) & 0b11111;
+    uint8_t rd  =  (current_instruction_ >> 7) & 0b11111;
+    uint64_t reg1_value = registers_.ReadGpr(rs1);
+    uint64_t reg2_value = registers_.ReadGpr(rs2);
+    
+    Validator v(memory_controller_);
+    if(v.validate(reg1_value,reg2_value)){
+    is_sparse_pipeline_busy_ = true;
+    uint64_t sparse_op_sparse_addr_ = registers_.ReadGpr(rs1);
+    uint64_t sparse_op_dense_addr_ = registers_.ReadGpr(rs2);
+    uint64_t sparse_op_meta_addr_ = registers_.ReadGpr(rs3);
+    uint64_t sparse_op_output_addr_ = registers_.ReadGpr(rd);
+
+    sparsePipeline::SparseMulPipeline sparse_pipeline_(
+            sparse_op_sparse_addr_,
+            sparse_op_dense_addr_,
+            sparse_op_meta_addr_,
+            sparse_op_output_addr_,
+            memory_controller_ 
+      );
+    
+    uint64_t size = sparse_pipeline_.getSize();
+    std::vector<uint8_t> old_block(size);
+    for (uint64_t i = 0; i < size; i++) {
+      old_block[i] = memory_controller_.ReadByte(sparse_op_output_addr_ + i);
+    }
+
+    sparse_pipeline_.execute();
+
+    std::vector<uint8_t> new_block(size);
+    for (uint64_t i = 0; i < size; i++) {
+      new_block[i] = memory_controller_.ReadByte(sparse_op_output_addr_ + i);
+    }
+
+    current_delta_.Matrix_block_changes.push_back({
+      sparse_op_output_addr_,
+      old_block,
+      new_block
+    });
+
+    remaining_stall_cycles += (sparse_pipeline_.getCycles()+1)/2;
+  }
+  return;
+  }
+
   control_unit_.SetControlSignals(current_instruction_);
 }
 
 void RVSSVM::Execute() {
+  if(is_sparse_pipeline_busy_) return;
+  if(is_meta_datapath_busy_) return;
   uint8_t opcode = current_instruction_ & 0b1111111;
   uint8_t funct3 = (current_instruction_ >> 12) & 0b111;
 
@@ -66,7 +171,7 @@ void RVSSVM::Execute() {
 
   uint8_t rs1 = (current_instruction_ >> 15) & 0b11111;
   uint8_t rs2 = (current_instruction_ >> 20) & 0b11111;
-
+ 
   int32_t imm = ImmGenerator(current_instruction_);
 
   uint64_t reg1_value = registers_.ReadGpr(rs1);
@@ -80,7 +185,6 @@ void RVSSVM::Execute() {
 
   alu::AluOp aluOperation = control_unit_.GetAluSignal(current_instruction_, control_unit_.GetAluOp());
   std::tie(execution_result_, overflow) = alu_.execute(aluOperation, reg1_value, reg2_value);
-
 
   if (control_unit_.GetBranch()) {
     if (opcode==get_instr_encoding(Instruction::kjalr).opcode || 
@@ -127,9 +231,6 @@ void RVSSVM::Execute() {
       }
 
     }
-
-
-
   }
 
   
@@ -141,7 +242,6 @@ void RVSSVM::Execute() {
 
   if (opcode==get_instr_encoding(Instruction::kauipc).opcode) { // AUIPC
     execution_result_ = static_cast<int64_t>(program_counter_) - 4 + (imm << 12);
-
   }
 }
 
@@ -398,6 +498,8 @@ void RVSSVM::HandleSyscall() {
 }
 
 void RVSSVM::WriteMemory() {
+  if(is_sparse_pipeline_busy_) return;
+  if(is_meta_datapath_busy_) return;
   uint8_t opcode = current_instruction_ & 0b1111111;
   uint8_t rs2 = (current_instruction_ >> 20) & 0b11111;
   uint8_t funct3 = (current_instruction_ >> 12) & 0b111;
@@ -567,11 +669,13 @@ void RVSSVM::WriteMemoryDouble() {
 }
 
 void RVSSVM::WriteBack() {
+  if(is_sparse_pipeline_busy_) return;
+  if(is_meta_datapath_busy_) return;
   uint8_t opcode = current_instruction_ & 0b1111111;
   uint8_t funct3 = (current_instruction_ >> 12) & 0b111;
   uint8_t rd = (current_instruction_ >> 7) & 0b11111;
   int32_t imm = ImmGenerator(current_instruction_);
-
+    
   if (opcode == get_instr_encoding(Instruction::kecall).opcode && 
       funct3 == get_instr_encoding(Instruction::kecall).funct3) { // ecall
     return;
@@ -630,7 +734,6 @@ void RVSSVM::WriteBack() {
   if (old_reg!=new_reg) {
     current_delta_.register_changes.push_back({reg_index, reg_type, old_reg, new_reg});
   }
-
 }
 
 void RVSSVM::WriteBackFloat() {
@@ -956,6 +1059,12 @@ void RVSSVM::Undo() {
     }
   }
 
+  for (const auto &blk : last.Matrix_block_changes) {
+    for (size_t i = 0; i < blk.old_bytes.size(); i++) {
+        memory_controller_.WriteByte(blk.base_addr + i, blk.old_bytes[i]);
+    }
+}
+
   program_counter_ = last.old_pc;
   instructions_retired_--;
   cycle_s_--;
@@ -1010,6 +1119,13 @@ void RVSSVM::Redo() {
       memory_controller_.WriteByte(change.address + i, change.new_bytes_vec[i]);
     }
   }
+
+  for (const auto &blk : next.Matrix_block_changes) {
+    for (size_t i = 0; i < blk.new_bytes.size(); i++) {
+        memory_controller_.WriteByte(blk.base_addr + i, blk.new_bytes[i]);
+    }
+  }
+
 
   program_counter_ = next.new_pc;
   instructions_retired_++;

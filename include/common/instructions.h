@@ -134,7 +134,8 @@ enum Instruction {
   kremw, 
   kremuw,
   ksparse_mul, //Sparse Multiplication instruction for Integers
-  
+  kmeta,      //meta data instruction
+
   kflw, 
   kfsw, 
   kfmadd_s, 
@@ -241,7 +242,7 @@ inline constexpr std::array<InstructionEncoding, static_cast<size_t>(Instruction
   InstructionEncoding(Instruction::ksra,        0b0110011, -1, 0b101, -1, -1, 0b0100000), // ksra
   InstructionEncoding(Instruction::kor,         0b0110011, -1, 0b110, -1, -1, 0b0000000), // kor
   InstructionEncoding(Instruction::kand,        0b0110011, -1, 0b111, -1, -1, 0b0000000), // kand
-
+  InstructionEncoding(Instruction::kmeta,       0b0110011, -1, 0b100, -1 ,-1, 0b1000000), //kmeta
 
   InstructionEncoding(Instruction::kmul,        0b0110011, -1, 0b000, -1, -1, 0b0000001), // kmul
   InstructionEncoding(Instruction::kmulh,       0b0110011, -1, 0b001, -1, -1, 0b0000001), // kmulh
@@ -691,6 +692,8 @@ bool isValidFDSTypeInstruction(const std::string &instruction);
 
 bool isFInstruction(const uint32_t &instruction);
 bool isDInstruction(const uint32_t &instruction);
+bool isSMInstruction(const uint32_t &instruction);
+bool isMetaInstruction(const uint32_t &instruction);
 
 std::string getExpectedSyntaxes(const std::string &opcode);
 

@@ -10,6 +10,7 @@
 #include "vm/vm_base.h"
 
 #include "rvss_control_unit.h"
+#include "vm/rvss/sparse_mul_pipeline.h"
 
 #include <stack>
 #include <vector>
@@ -31,13 +32,19 @@ struct MemoryChange {
   std::vector<uint8_t> new_bytes_vec; 
 };
 
+struct MatrixMemoryChange {
+  uint64_t base_addr;
+  std::vector<uint8_t> old_bytes;  
+  std::vector<uint8_t> new_bytes;  
+};
+
 struct StepDelta {
   uint64_t old_pc;
   uint64_t new_pc;
   std::vector<RegisterChange> register_changes;
   std::vector<MemoryChange> memory_changes;
+  std::vector<MatrixMemoryChange> Matrix_block_changes;
 };
-
 
 // class RingUndoRedo {
 //   std::vector<StepDelta> buffer_;
@@ -133,7 +140,7 @@ class RVSSVM : public VmBase {
   void ExecuteDouble();
   void ExecuteCsr();
   void HandleSyscall();
-
+  
   void WriteMemory();
   void WriteMemoryFloat();
   void WriteMemoryDouble();
